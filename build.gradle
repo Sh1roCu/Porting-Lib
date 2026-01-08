@@ -1,5 +1,5 @@
-import io.github.fabricators_of_create.porting_lib_build.tasks.FmjExpander
 import io.github.fabricators_of_create.porting_lib_build.PortingLibBuildPlugin
+import io.github.fabricators_of_create.porting_lib_build.tasks.FmjExpander
 
 plugins {
 	id "fabric-loom"
@@ -19,8 +19,8 @@ Provider<String> branchProvider = providers.exec {
 
 String versionNumber = providers.provider {
 	String version = mod_version // 2.3.1
-	if (System.getenv("SNAPSHOT") == "true") {
-		version += "-beta." + System.getenv("GITHUB_RUN_NUMBER") // 2.3.1-beta.1000
+	if (/*System.getenv("SNAPSHOT")*/ project.SNAPSHOT == "true") {
+		version += "-beta." + project.betaVer /*System.getenv("GITHUB_RUN_NUMBER")*/ // 2.3.1-beta.1000
 	}
 	return version + "+" + branchProvider.get() // 2.3.1-beta.1000+1.20.1
 }.get()
@@ -28,7 +28,7 @@ String versionNumber = providers.provider {
 dependencies {
 	subprojects.forEach {
 		api(project(path: ":$it.name", configuration: "namedElements"))
-        include(project(":$it.name"))
+		include(project(":$it.name"))
 	}
 }
 
@@ -109,8 +109,14 @@ allprojects {
 		})
 		modImplementation("net.fabricmc:fabric-loader:$loader_version")
 
-		modCompileOnly("com.terraformersmc:modmenu:$modmenu_version") { exclude group: "net.fabricmc"; exclude group: "net.fabricmc.fabric-api" }
-		modLocalRuntime("com.terraformersmc:modmenu:$modmenu_version") { exclude group: "net.fabricmc"; exclude group: "net.fabricmc.fabric-api" }
+		modCompileOnly("com.terraformersmc:modmenu:$modmenu_version") {
+			exclude group: "net.fabricmc";
+			exclude group: "net.fabricmc.fabric-api"
+		}
+		modLocalRuntime("com.terraformersmc:modmenu:$modmenu_version") {
+			exclude group: "net.fabricmc";
+			exclude group: "net.fabricmc.fabric-api"
+		}
 
 		// common dependencies
 		// each module can also specify additional ones
@@ -138,18 +144,18 @@ allprojects {
 
 	processResources {
 		Map<String, ?> properties = [
-				version: version,
-				loader_version: loader_version,
-				fabric_api_version: fabric_api_version,
+				version             : version,
+				loader_version      : loader_version,
+				fabric_api_version  : fabric_api_version,
 				minecraft_dependency: minecraft_dependency,
-				java_version: sourceCompatibility,
+				java_version        : sourceCompatibility,
 
 				// property replacement is a bit too eager
-				class_5124: "\$class_5124",
-				class_56: "\$class_56",
-                class_9665: "\$class_9665",
-				class_7226: "\$class_7226",
-				class_1793: "\$class_1793"
+				class_5124          : "\$class_5124",
+				class_56            : "\$class_56",
+				class_9665          : "\$class_9665",
+				class_7226          : "\$class_7226",
+				class_1793          : "\$class_1793"
 		]
 
 		properties.forEach(inputs::property)
@@ -214,17 +220,20 @@ subprojects {
 
 	publishing {
 		repositories {
+//			maven {
+//				name = "devOS"
+//				String mavenType = System.getenv("RELEASE") == "true" ? "releases" : "snapshots"
+//				url = "https://mvn.devos.one/$mavenType/"
+//				credentials {
+//					username = System.getenv("MAVEN_USER")
+//					password = System.getenv("MAVEN_PASS")
+//				}
+//				authentication {
+//					register("basic", BasicAuthentication)
+//				}
+//			}
 			maven {
-				name = "devOS"
-				String mavenType = System.getenv("RELEASE") == "true" ? "releases" : "snapshots"
-				url = "https://mvn.devos.one/$mavenType/"
-				credentials {
-					username = System.getenv("MAVEN_USER")
-					password = System.getenv("MAVEN_PASS")
-				}
-				authentication {
-					register("basic", BasicAuthentication)
-				}
+				url "file:///D:/github_maven/Sh1roCu_MCRepo/repository"
 			}
 		}
 
@@ -232,6 +241,21 @@ subprojects {
 			register("mavenJava", MavenPublication) {
 				from((SoftwareComponent) components["java"])
 			}
+		}
+	}
+}
+
+publishing {
+	publications {
+		create("mavenJava", MavenPublication) {
+			artifactId = "all"
+			from components.java
+		}
+	}
+
+	repositories {
+		maven {
+			url "file:///D:/github_maven/Sh1roCu_MCRepo/repository"
 		}
 	}
 }
